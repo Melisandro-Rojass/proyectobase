@@ -6,22 +6,218 @@
   <title>Página 2</title>
 </head>
 
+<style>
+body{
+    font-family: Arial, sans-serif;
+    text-align:center;
+    background:#f4f4f4;
+}
+
+h1{
+    color:#333;
+}
+
+#grid{
+    display:grid;
+    grid-template-columns: repeat(12,40px);
+    gap:2px;
+    justify-content:center;
+    margin:20px;
+}
+
+.cell{
+    width:40px;
+    height:40px;
+    border:1px solid #ccc;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:white;
+    font-weight:bold;
+    cursor:pointer;
+    user-select:none;
+}
+
+.selected{
+    background:#4CAF50;
+    color:white;
+}
+
+.found{
+    background:#2196F3;
+    color:white;
+}
+
+#words{
+    margin:20px;
+    font-size:18px;
+}
+
+.completed{
+    text-decoration: line-through;
+    color:green;
+}
+
+button{
+    padding:10px 20px;
+    font-size:16px;
+    cursor:pointer;
+}
+</style>
+</head>
 <body>
-  <h1>Página 2</h1>
-  <p>Contenido a editar por el miembro 2 del equipo.</p>
 
-  <h2>Formulario de contacto</h2>
-  <form action="/enviar" method="post">
-    <label for="nombre">Nombre:</label><br />
-    <input type="text" id="nombre" name="nombre" required /><br /><br />
+<h1>🔍 Sopa de Letras</h1>
 
-    <label for="correo">Correo electrónico:</label><br />
-    <input type="email" id="correo" name="correo" required /><br /><br />
+<p>Encuentra las palabras ocultas.</p>
 
-    <label for="mensaje">Mensaje:</label><br />
-    <textarea id="mensaje" name="mensaje" rows="5" cols="40" required></textarea><br /><br />
+<div id="words"></div>
 
-    <input type="submit" value="Enviar" />
-  </form>
+<div id="grid"></div>
+
+<button onclick="location.reload()">Nueva Partida</button>
+
+<script>
+const words = [
+    "HTML",
+    "CSS",
+    "JAVASCRIPT",
+    "CODIGO",
+    "WEB"
+];
+
+const size = 12;
+let grid = Array(size).fill().map(() => Array(size).fill(''));
+let selectedLetters = [];
+let selectedCells = [];
+
+function placeWord(word){
+    let placed = false;
+
+    while(!placed){
+        const horizontal = Math.random() > 0.5;
+
+        if(horizontal){
+            let row = Math.floor(Math.random()*size);
+            let col = Math.floor(Math.random()*(size-word.length));
+
+            let fits = true;
+            for(let i=0;i<word.length;i++){
+                if(grid[row][col+i] !== ''){
+                    fits = false;
+                    break;
+                }
+            }
+
+            if(fits){
+                for(let i=0;i<word.length;i++){
+                    grid[row][col+i] = word[i];
+                }
+                placed = true;
+            }
+        }else{
+            let row = Math.floor(Math.random()*(size-word.length));
+            let col = Math.floor(Math.random()*size);
+
+            let fits = true;
+            for(let i=0;i<word.length;i++){
+                if(grid[row+i][col] !== ''){
+                    fits = false;
+                    break;
+                }
+            }
+
+            if(fits){
+                for(let i=0;i<word.length;i++){
+                    grid[row+i][col] = word[i];
+                }
+                placed = true;
+            }
+        }
+    }
+}
+
+words.forEach(placeWord);
+
+const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+for(let r=0;r<size;r++){
+    for(let c=0;c<size;c++){
+        if(grid[r][c] === ''){
+            grid[r][c] =
+            alphabet[Math.floor(Math.random()*alphabet.length)];
+        }
+    }
+}
+
+const gridDiv = document.getElementById("grid");
+
+grid.forEach(row=>{
+    row.forEach(letter=>{
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.textContent = letter;
+
+        cell.addEventListener("click", ()=>{
+
+            if(cell.classList.contains("found")) return;
+
+            cell.classList.toggle("selected");
+
+            if(cell.classList.contains("selected")){
+                selectedLetters.push(letter);
+                selectedCells.push(cell);
+            }else{
+                const index = selectedCells.indexOf(cell);
+                selectedCells.splice(index,1);
+                selectedLetters.splice(index,1);
+            }
+
+            checkWord();
+        });
+
+        gridDiv.appendChild(cell);
+    });
+});
+
+const wordsDiv = document.getElementById("words");
+
+words.forEach(word=>{
+    const span = document.createElement("span");
+    span.id = word;
+    span.textContent = word + " ";
+    wordsDiv.appendChild(span);
+});
+
+let foundCount = 0;
+
+function checkWord(){
+    const selected = selectedLetters.join('');
+
+    words.forEach(word=>{
+        if(selected === word){
+
+            selectedCells.forEach(cell=>{
+                cell.classList.remove("selected");
+                cell.classList.add("found");
+            });
+
+            document.getElementById(word)
+                .classList.add("completed");
+
+            selectedCells = [];
+            selectedLetters = [];
+            foundCount++;
+
+            if(foundCount === words.length){
+                setTimeout(()=>{
+                    alert("🎉 ¡Felicidades! Encontraste todas las palabras.");
+                },200);
+            }
+        }
+    });
+}
+</script>
+
 </body>
 </html>
